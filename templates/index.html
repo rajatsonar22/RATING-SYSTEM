@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Ratings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Roboto', sans-serif;
+            text-align: center; 
+            background-color: black; 
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            font-size: 5vw;
+        }
+        .team-container { 
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px; /* Increased space between topics */
+        }
+        .team { 
+            width: 90%; 
+            max-width: 700px;
+            padding: 15px; 
+            background: #3498db; 
+            color: black; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column;
+            align-items: flex-start; /* Align content to left */
+            justify-content: center;
+            transition: transform 0.2s ease-in-out;
+            margin-bottom: 20px; /* Increased space between topics */
+        }
+        .team:hover {
+            transform: scale(1.02);
+        }
+        .team-description { 
+            text-align: left;
+            font-size: 3vw;
+        }
+        .rating-container { 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .stars span { 
+            font-size: 5vw;
+            cursor: pointer;
+            color: gray;
+            transition: color 0.2s ease-in-out;
+        }
+        .stars span:hover, .stars span.active { 
+            color: gold;
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2.5vw;
+            }
+            .team-description {
+                font-size: 1.2rem;
+            }
+            .stars span {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Select a Topic to Rate</h1>
+    <div class="team-container"></div>
+
+    <script>
+        const topics = [
+            "PPT Presentation",
+            "AI Deepfake Voice Detection",
+            "Intelligent Job Classification and Notifications Using Placement Data",
+            "Health Coach: Your Personal Health Companion",
+            "Intelligent Learner Management System",
+            "Shopsphere (ParkPay)",
+            "Currency Detection for Visually Impaired",
+            "Remote Interview",
+            "Hospital Management System",
+            "HUD Integrated Helmet",
+            "Deepfake Detection System",
+            "Healthy Bites",
+            "Doc Tech",
+            "Custom Operating System for Effective Learning",
+            "Eco-System",
+            "QURA: The Signware"
+        ];
+
+        const container = document.querySelector(".team-container");
+
+        // Load saved ratings from local storage
+        function loadRatings() {
+            return JSON.parse(localStorage.getItem("ratings")) || {};
+        }
+
+        // Save rating in local storage
+        function saveRating(topic, rating) {
+            let ratings = loadRatings();
+            ratings[topic] = rating;
+            localStorage.setItem("ratings", JSON.stringify(ratings));
+        }
+
+        // Generate topics dynamically
+        topics.forEach((topic, index) => {
+            let div = document.createElement("div");
+            div.className = "team";
+            div.innerHTML = `
+                <div class="team-description">
+                    <h2>${topic}</h2>
+                    <div>Your description here</div>
+                </div>
+                <div class="rating-container" id="ratingContainer-${index}">
+                    <div class="stars" data-topic="${topic}">
+                        <span data-value="1">★</span>
+                        <span data-value="2">★</span>
+                        <span data-value="3">★</span>
+                        <span data-value="4">★</span>
+                        <span data-value="5">★</span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        // Handle Star Selection and Rating Submission
+        document.querySelectorAll(".stars").forEach(starContainer => {
+            let stars = starContainer.querySelectorAll("span");
+            let topic = starContainer.dataset.topic;
+            let savedRatings = loadRatings();
+
+            // Apply previous rating if exists
+            if (savedRatings[topic]) {
+                let prevRating = savedRatings[topic];
+                for (let i = 0; i < prevRating; i++) {
+                    stars[i].classList.add("active");
+                }
+            }
+
+            stars.forEach(star => {
+                star.addEventListener("click", function() {
+                    let selectedRating = this.getAttribute("data-value");
+
+                    // Prevent multiple ratings for the same topic
+                    if (savedRatings[topic]) {
+                        alert("You have already rated this topic!");
+                        return;
+                    }
+
+                    stars.forEach(s => s.classList.remove("active"));
+                    for (let i = 0; i < selectedRating; i++) {
+                        stars[i].classList.add("active");
+                    }
+
+                    // Save the rating locally
+                    saveRating(topic, selectedRating);
+
+                    // Submit Rating to Backend
+                    fetch("/rate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ topic: topic, rating: selectedRating })
+                    })
+                    .then(response => response.json())
+                    .then(data => alert(data.message))
+                    .catch(error => console.error("Error:", error));
+                });
+            });
+        });
+
+    </script>
+
+</body>
+</html>
