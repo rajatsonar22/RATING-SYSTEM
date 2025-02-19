@@ -9,54 +9,55 @@
         body { 
             font-family: 'Roboto', sans-serif;
             text-align: center; 
-            background-color: #121212; 
-            color: white; 
+            background-color: #121212; /* Black background */
+            color: #fff; /* White text */
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 600px;
             margin: auto;
         }
         .team-container { 
             margin-top: 20px; 
         }
-        .team { 
-            width: 100%;
-            max-width: 700px;
-            height: 120px;
-            margin: 20px auto;
-            padding: 20px;
-            background: #1E88E5;
-            color: white;
-            border-radius: 12px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
-        }
-        .team-description { 
+        .team {
             text-align: left;
-            flex-grow: 1;
+            padding: 15px;
+            background: #1E1E1E; /* Dark gray divs */
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s ease-in-out;
         }
-        .rating-container {
-            display: flex;
-            gap: 10px;
+        .team:hover {
+            transform: scale(1.02);
+        }
+        .team h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: #f4f4f4;
         }
         .stars span {
-            font-size: 30px;
+            font-size: 24px;
             cursor: pointer;
             color: gray;
+            margin: 5px 2px;
         }
         .stars span:hover, .stars span.active {
-            color: gold;
+            color: #FFD700; /* Gold stars */
+        }
+        .rating-container {
+            text-align: left;
+            margin-top: 5px;
         }
         /* Admin Section */
         .admin-container {
             margin-top: 40px;
             padding: 20px;
-            background: #333;
+            background: #222; /* Darker gray for contrast */
             border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
         }
         input, button {
             padding: 10px;
@@ -64,14 +65,15 @@
             margin: 5px;
             border-radius: 6px;
             border: none;
+            background-color: #333;
+            color: white;
         }
         button {
-            background-color: #E91E63;
-            color: white;
+            background-color: #4285F4;
             cursor: pointer;
         }
         button:hover {
-            background-color: #C2185B;
+            background-color: #357ae8;
         }
     </style>
 </head>
@@ -120,10 +122,8 @@
             let div = document.createElement("div");
             div.className = "team";
             div.innerHTML = `
-                <div class="team-description">
-                    <h2>${topic}</h2>
-                    <div>Your description here</div>
-                </div>
+                <h2>${topic}</h2>
+                <div>Your description here</div>
                 <div class="rating-container" id="ratingContainer-${index}">
                     <div class="stars" data-team="${topic}">
                         <span data-value="1">★</span>
@@ -134,18 +134,17 @@
                     </div>
                 </div>
             `;
-            div.onclick = () => rateTeam(topic);
             container.appendChild(div);
         });
 
         // Handle Star Selection and Rating Submission
-        function rateTeam(topic) {
-            const stars = document.querySelectorAll(`[data-team="${topic}"] span`);
-            let selectedRating = 0;
+        document.querySelectorAll(".stars").forEach(starContainer => {
+            let stars = starContainer.querySelectorAll("span");
+            let team = starContainer.dataset.team;
 
             stars.forEach(star => {
                 star.onclick = function () {
-                    selectedRating = this.getAttribute("data-value");
+                    let selectedRating = this.getAttribute("data-value");
                     stars.forEach(s => s.classList.remove("active"));
                     for (let i = 0; i < selectedRating; i++) {
                         stars[i].classList.add("active");
@@ -155,7 +154,7 @@
                     fetch("/rate", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ team: topic, rating: selectedRating })
+                        body: JSON.stringify({ team: team, rating: selectedRating })
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -164,7 +163,7 @@
                     .catch(error => console.error("Error:", error));
                 };
             });
-        }
+        });
 
         // Check Votes Function
         function checkVotes() {
@@ -180,7 +179,7 @@
                 if (data.error) {
                     alert(data.error);
                 } else {
-                    document.getElementById("voteCount").innerText = `Total Votes: ${data.total_votes}`;
+                    document.getElementById("voteCount").innerText = JSON.stringify(data, null, 2);
                 }
             })
             .catch(error => console.error("Error:", error));
