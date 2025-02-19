@@ -8,99 +8,115 @@
     <style>
         body { 
             font-family: 'Roboto', sans-serif;
-            text-align: center; 
-            background-color: #121212; /* Black background */
-            color: #fff; /* White text */
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-        }
-        .team-container { 
-            margin-top: 20px; 
-        }
-        .team {
-            text-align: left;
-            padding: 15px;
-            background: #1E1E1E; /* Dark gray divs */
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
-            transition: transform 0.2s ease-in-out;
-        }
-        .team:hover {
-            transform: scale(1.02);
-        }
-        .team h2 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 700;
-            color: #f4f4f4;
-        }
-        .stars span {
-            font-size: 24px;
-            cursor: pointer;
-            color: gray;
-            margin: 5px 2px;
-        }
-        .stars span:hover, .stars span.active {
-            color: #FFD700; /* Gold stars */
-        }
-        .rating-container {
-            text-align: left;
-            margin-top: 5px;
-        }
-        /* Admin Section */
-        .admin-container {
-            margin-top: 40px;
-            padding: 20px;
-            background: #222; /* Darker gray for contrast */
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
-        }
-        input, button {
-            padding: 10px;
-            font-size: 16px;
-            margin: 5px;
-            border-radius: 6px;
-            border: none;
-            background-color: #333;
+            text-align: center;
+            background-color: black;
             color: white;
+            margin: 0;
+            padding: 0;
         }
-        button {
-            background-color: #4285F4;
-            cursor: pointer;
+
+        .logo {
+            position: fixed;
+            top: 10px;
+            width: 40px;
+            height: 40px;
+            z-index: 1000;
         }
-        button:hover {
-            background-color: #357ae8;
+        .logo-left { left: 10px; }
+        .logo-right { right: 10px; }
+
+        h1 {
+            margin-top: 60px;
+            font-size: 24px;
+        }
+
+        .team-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .team {
+            width: 90%;
+            max-width: 450px;
+            margin: 15px;
+            padding: 15px;
+            background: #3498db;
+            color: black;
+            border-radius: 10px;
+            text-align: center;
+            transition: 0.3s ease;
+        }
+        #admin
+
+        .team:hover { transform: scale(1.05); }
+        .rating-container { display: flex; justify-content: center; margin-top: 10px; }
+        .stars span { font-size: 25px; cursor: pointer; color: gray; padding: 5px; }
+        .stars span:hover, .stars span.active { color: gold; }
+
+        .check-results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #222;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .check-results input, .check-results button {
+            padding: 10px;
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .check-results input { background: #fff; color: black; }
+        .check-results button { background: #3498db; color: white; font-weight: bold; cursor: pointer; }
+        .check-results button:hover { background: #2980b9; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+            color: black;
+            border-radius: 10px;
+        }
+
+        table, th, td { border: 1px solid black; }
+        th, td { padding: 10px; text-align: center; }
+
+        @media (max-width: 768px) {
+            .team { width: 95%; }
+            .logo { width: 35px; height: 35px; }
+            h1 { font-size: 20px; }
         }
     </style>
 </head>
 <body>
+    <img src="{{ url_for('static', filename='tilak_logo.png') }}" alt="Tilak Logo" class="logo logo-left">
+    <img src="{{ url_for('static', filename='innovators_logo.png') }}" alt="Innovators Logo" class="logo logo-right">
 
-    <h1>Rate Your Favorite Project</h1>
+    <h1>Select a Topic to Rate</h1>
+    <div class="team-container"></div>
 
-    <div class="container">
-        <div class="team-container">
-            <!-- Teams will be generated dynamically -->
-        </div>
-        
-        <!-- Admin Section -->
-        <div class="admin-container">
-            <h2>Check Total Votes</h2>
-            <input type="password" id="adminKey" placeholder="Enter Secret Key">
-            <button onclick="checkVotes()">Check</button>
-            <p id="voteCount"></p>
-        </div>
+    <div class="check-results">
+        <h2>Check Results</h2>
+        <input type="password" id="adminKey" placeholder="Enter Admin Key">
+        <button onclick="checkResults()">Check</button>
+        <div id="results"></div>
     </div>
 
     <script>
         const topics = [
             "PPT Presentation",
             "AI Deepfake Voice Detection",
-            "Intelligent Job Classification and Notifications Using Placement Data​",
-            "Health Coach: Your Personal Health Companion",
+            "Intelligent Job Classification & Notifications",
+            "Health Coach",
             "Intelligent Learner Management System",
             "Shopsphere (ParkPay)",
             "Currency Detection for Visually Impaired",
@@ -110,22 +126,23 @@
             "Deepfake Detection System",
             "Healthy Bites",
             "Doc Tech",
-            "Custom Operating System for Effective Learning",
+            "Custom Operating System",
             "Eco-System",
             "QURA: The Signware"
         ];
-        
+
         const container = document.querySelector(".team-container");
 
-        // Generate teams dynamically
         topics.forEach((topic, index) => {
             let div = document.createElement("div");
             div.className = "team";
             div.innerHTML = `
-                <h2>${topic}</h2>
-                <div>Your description here</div>
-                <div class="rating-container" id="ratingContainer-${index}">
-                    <div class="stars" data-team="${topic}">
+                <div class="team-description">
+                    <h2>${topic}</h2>
+                    <div>Your description here</div>
+                </div>
+                <div class="rating-container">
+                    <div class="stars" data-topic="${topic}">
                         <span data-value="1">★</span>
                         <span data-value="2">★</span>
                         <span data-value="3">★</span>
@@ -137,38 +154,26 @@
             container.appendChild(div);
         });
 
-        // Handle Star Selection and Rating Submission
-        document.querySelectorAll(".stars").forEach(starContainer => {
-            let stars = starContainer.querySelectorAll("span");
-            let team = starContainer.dataset.team;
-
-            stars.forEach(star => {
-                star.onclick = function () {
-                    let selectedRating = this.getAttribute("data-value");
-                    stars.forEach(s => s.classList.remove("active"));
-                    for (let i = 0; i < selectedRating; i++) {
-                        stars[i].classList.add("active");
-                    }
-
-                    // Submit Rating to Backend
-                    fetch("/rate", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ team: team, rating: selectedRating })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message);
-                    })
-                    .catch(error => console.error("Error:", error));
-                };
-            });
+        document.addEventListener("click", function (event) {
+            if (event.target.matches(".stars span")) {
+                let star = event.target;
+                let ratingContainer = star.parentElement;
+                let selectedRating = star.getAttribute("data-value");
+                let allStars = ratingContainer.querySelectorAll("span");
+                allStars.forEach(s => s.classList.remove("active"));
+                for (let i = 0; i < selectedRating; i++) { allStars[i].classList.add("active"); }
+                let topic = ratingContainer.getAttribute("data-topic");
+                fetch("/rate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ team: topic, rating: selectedRating })
+                });
+            }
         });
 
-        // Check Votes Function
-        function checkVotes() {
+        function checkResults() {
             const key = document.getElementById("adminKey").value;
-
+            if (!key) { alert("Please enter the admin key!"); return; }
             fetch("/check_votes", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -179,12 +184,15 @@
                 if (data.error) {
                     alert(data.error);
                 } else {
-                    document.getElementById("voteCount").innerText = JSON.stringify(data, null, 2);
+                    let resultHtml = `<table><tr><th>Topic</th><th>Votes</th></tr>`;
+                    for (let team in data) {
+                        resultHtml += `<tr><td>${team}</td><td>${data[team].votes}</td></tr>`;
+                    }
+                    resultHtml += `</table>`;
+                    document.getElementById("results").innerHTML = resultHtml;
                 }
-            })
-            .catch(error => console.error("Error:", error));
+            });
         }
     </script>
-
 </body>
 </html>
