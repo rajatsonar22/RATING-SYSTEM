@@ -25,10 +25,14 @@ def rate():
         # Store rating
         votes.append({"team": team, "rating": int(rating)})
 
-        return jsonify({"message": "Rating submitted successfully!"})
+        return jsonify({"message": "Rating submitted successfully!", "redirect": "/thank_you"})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/thank_you')
+def thank_you():
+    return render_template("thank_you.html")
 
 @app.route('/check_votes', methods=['POST'])
 def check_votes():
@@ -49,11 +53,10 @@ def check_votes():
             else:
                 team_ratings[team] = {"total_votes": 1, "total_rating": vote["rating"]}
 
-        # Calculate average ratings
-        results = {team: {"votes": data["total_votes"], "average_rating": round(data["total_rating"] / data["total_votes"], 1)}
-                   for team, data in team_ratings.items()}
+        # Prepare data for table
+        table_data = [{"team": team, "votes": data["total_votes"]} for team, data in team_ratings.items()]
 
-        return jsonify(results)
+        return jsonify({"results": table_data})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
