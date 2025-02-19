@@ -1,16 +1,13 @@
-from flask import Flask, request, jsonify, send_file, render_template
-import pandas as pd
-import os
+#updated code
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 
-# File to store ratings
-FILE_PATH = "ratings.xlsx"
+# In-memory storage for ratings
+ratings_list = []
 
-# Initialize Excel file if not exists
-if not os.path.exists(FILE_PATH):
-    df = pd.DataFrame(columns=["Team", "Rating"])
-    df.to_excel(FILE_PATH, index=False)
+# Secret key for checking votes
+SECRET_KEY = "admin123"  # Change this to your own secret key
 
 @app.route('/')
 def home():
@@ -26,21 +23,26 @@ def rate():
         if not all([team, rating]):
             return jsonify({"error": "Missing required fields"}), 400
 
-        # Append rating to Excel
-        df = pd.read_excel(FILE_PATH)
-        new_entry = pd.DataFrame([{"Team": team, "Rating": rating}])
-        df = pd.concat([df, new_entry], ignore_index=True)
-        df.to_excel(FILE_PATH, index=False)
+        # Store rating in memory
+        ratings_list.append({"Team": team, "Rating": rating})
 
         return jsonify({"message": "Rating submitted successfully!"})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/download', methods=['GET'])
-def download():
+@app.route('/check_votes', methods=['POST'])
+def check_votes():
     try:
-        return send_file(FILE_PATH, as_attachment=True)
+        data = request.json
+        entered_key = data.get("key")
+
+        if entered_key == SECRET_KEY:
+            total_votes = len(ratings_list)
+            return jsonify({"total_votes": total_votes})
+        else:
+            return jsonify({"error": "Invalid key"}), 403
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

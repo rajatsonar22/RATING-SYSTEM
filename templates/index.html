@@ -10,77 +10,75 @@
             font-family: 'Roboto', sans-serif;
             text-align: center; 
             background-color: black; 
-            color: white;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            font-size: 5vw;
+            color: white; 
         }
         .team-container { 
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 20px; /* Increased space between topics */
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin-top: 20px; 
         }
         .team { 
-            width: 90%; 
-            max-width: 700px;
-            padding: 15px; 
+            width: 700px;  
+            height: 100px;
+            margin: 30px 0; /* Increased space between teams */
+            padding: 20px; 
             background: #3498db; 
             color: black; 
             border-radius: 10px; 
             cursor: pointer; 
             display: flex; 
-            flex-direction: column;
-            align-items: flex-start; /* Align content to left */
-            justify-content: center;
-            transition: transform 0.2s ease-in-out;
-            margin-bottom: 20px; /* Increased space between topics */
-        }
-        .team:hover {
-            transform: scale(1.02);
+            justify-content: space-between;
+            align-items: center;
         }
         .team-description { 
-            text-align: left;
-            font-size: 3vw;
+            color: black; 
+            font-size: 16px; 
+            text-align: left; 
+            flex-grow: 1;
+            margin-left: 20px; /* Shifted text to the left */
         }
         .rating-container { 
-            display: flex;
-            justify-content: center;
+            display: flex; 
+            justify-content: center; 
             align-items: center;
             gap: 10px;
-            margin-top: 10px;
-            width: 100%;
         }
-        .stars span { 
-            font-size: 5vw;
-            cursor: pointer;
-            color: gray;
-            transition: color 0.2s ease-in-out;
-        }
-        .stars span:hover, .stars span.active { 
-            color: gold;
-        }
+        .stars span { font-size: 30px; cursor: pointer; color: gray; }
+        .stars span:hover, .stars span.active { color: gold; }
 
-        @media (min-width: 768px) {
-            h1 {
-                font-size: 2.5vw;
-            }
-            .team-description {
-                font-size: 1.2rem;
-            }
-            .stars span {
-                font-size: 2rem;
-            }
+        /* Style for check votes section */
+        .check-votes-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #2ecc71;
+            border-radius: 10px;
+            width: 400px;
+            margin-left: auto;
+            margin-right: auto;
         }
+        input, button {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+        input { width: 80%; }
+        button { background: #2980b9; color: white; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h1>Select a Topic to Rate</h1>
+    <h1>Select a Team to Rate</h1>
     <div class="team-container"></div>
+
+    <!-- Check Votes Section -->
+    <div class="check-votes-container">
+        <h2>Check Total Votes</h2>
+        <input type="password" id="adminKey" placeholder="Enter secret key">
+        <button onclick="checkVotes()">Check</button>
+        <p id="voteCount"></p>
+    </div>
 
     <script>
         const topics = [
@@ -98,25 +96,13 @@
             "Healthy Bites",
             "Doc Tech",
             "Custom Operating System for Effective Learning",
-            "Eco-System",
+            "Eco-system",
             "QURA: The Signware"
         ];
 
         const container = document.querySelector(".team-container");
 
-        // Load saved ratings from local storage
-        function loadRatings() {
-            return JSON.parse(localStorage.getItem("ratings")) || {};
-        }
-
-        // Save rating in local storage
-        function saveRating(topic, rating) {
-            let ratings = loadRatings();
-            ratings[topic] = rating;
-            localStorage.setItem("ratings", JSON.stringify(ratings));
-        }
-
-        // Generate topics dynamically
+        // Generate teams dynamically
         topics.forEach((topic, index) => {
             let div = document.createElement("div");
             div.className = "team";
@@ -126,7 +112,7 @@
                     <div>Your description here</div>
                 </div>
                 <div class="rating-container" id="ratingContainer-${index}">
-                    <div class="stars" data-topic="${topic}">
+                    <div class="stars" data-team="${topic}">
                         <span data-value="1">★</span>
                         <span data-value="2">★</span>
                         <span data-value="3">★</span>
@@ -135,54 +121,57 @@
                     </div>
                 </div>
             `;
+            div.onclick = () => rateTeam(topic);
             container.appendChild(div);
         });
 
         // Handle Star Selection and Rating Submission
-        document.querySelectorAll(".stars").forEach(starContainer => {
-            let stars = starContainer.querySelectorAll("span");
-            let topic = starContainer.dataset.topic;
-            let savedRatings = loadRatings();
-
-            // Apply previous rating if exists
-            if (savedRatings[topic]) {
-                let prevRating = savedRatings[topic];
-                for (let i = 0; i < prevRating; i++) {
-                    stars[i].classList.add("active");
-                }
-            }
+        function rateTeam(teamName) {
+            const stars = document.querySelectorAll(`[data-team="${teamName}"] span`);
+            let selectedRating = 0;
 
             stars.forEach(star => {
-                star.addEventListener("click", function() {
-                    let selectedRating = this.getAttribute("data-value");
-
-                    // Prevent multiple ratings for the same topic
-                    if (savedRatings[topic]) {
-                        alert("You have already rated this topic!");
-                        return;
-                    }
-
+                star.onclick = function () {
+                    selectedRating = this.getAttribute("data-value");
                     stars.forEach(s => s.classList.remove("active"));
                     for (let i = 0; i < selectedRating; i++) {
                         stars[i].classList.add("active");
                     }
 
-                    // Save the rating locally
-                    saveRating(topic, selectedRating);
-
                     // Submit Rating to Backend
                     fetch("/rate", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ topic: topic, rating: selectedRating })
+                        body: JSON.stringify({ team: teamName, rating: selectedRating })
                     })
                     .then(response => response.json())
-                    .then(data => alert(data.message))
+                    .then(data => {
+                        alert(data.message);
+                    })
                     .catch(error => console.error("Error:", error));
-                });
+                };
             });
-        });
+        }
 
+        // Check Votes Function
+        function checkVotes() {
+            const key = document.getElementById("adminKey").value;
+
+            fetch("/check_votes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ key: key })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.total_votes !== undefined) {
+                    document.getElementById("voteCount").innerText = `Total Votes: ${data.total_votes}`;
+                } else {
+                    document.getElementById("voteCount").innerText = "Invalid Key!";
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
     </script>
 
 </body>
