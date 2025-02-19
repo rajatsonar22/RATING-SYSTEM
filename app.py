@@ -1,17 +1,16 @@
-#updated code
 from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 
-# In-memory storage for ratings
-ratings_list = []
+# Store votes in a list
+votes = []
 
-# Secret key for checking votes
-SECRET_KEY = "admin123"  # Change this to your own secret key
+# Admin Secret Key
+SECRET_KEY = "admin123"  # Change this for security
 
 @app.route('/')
 def home():
-    return render_template("index.html")  # Serve frontend
+    return render_template("index.html")
 
 @app.route('/rate', methods=['POST'])
 def rate():
@@ -23,8 +22,8 @@ def rate():
         if not all([team, rating]):
             return jsonify({"error": "Missing required fields"}), 400
 
-        # Store rating in memory
-        ratings_list.append({"Team": team, "Rating": rating})
+        # Store rating
+        votes.append({"team": team, "rating": rating})
 
         return jsonify({"message": "Rating submitted successfully!"})
 
@@ -35,13 +34,12 @@ def rate():
 def check_votes():
     try:
         data = request.json
-        entered_key = data.get("key")
+        key = data.get("key")
 
-        if entered_key == SECRET_KEY:
-            total_votes = len(ratings_list)
-            return jsonify({"total_votes": total_votes})
-        else:
+        if key != SECRET_KEY:
             return jsonify({"error": "Invalid key"}), 403
+
+        return jsonify({"total_votes": len(votes)})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

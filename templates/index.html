@@ -9,82 +9,95 @@
         body { 
             font-family: 'Roboto', sans-serif;
             text-align: center; 
-            background-color: black; 
+            background-color: #121212; 
             color: white; 
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
         }
         .team-container { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
             margin-top: 20px; 
         }
         .team { 
-            width: 700px;  
-            height: 100px;
-            margin: 30px 0; /* Increased space between teams */
-            padding: 20px; 
-            background: #3498db; 
-            color: black; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            display: flex; 
+            width: 100%;
+            max-width: 700px;
+            height: 120px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #1E88E5;
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
         }
         .team-description { 
-            color: black; 
-            font-size: 16px; 
-            text-align: left; 
+            text-align: left;
             flex-grow: 1;
-            margin-left: 20px; /* Shifted text to the left */
         }
-        .rating-container { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
+        .rating-container {
+            display: flex;
             gap: 10px;
         }
-        .stars span { font-size: 30px; cursor: pointer; color: gray; }
-        .stars span:hover, .stars span.active { color: gold; }
-
-        /* Style for check votes section */
-        .check-votes-container {
-            margin-top: 30px;
+        .stars span {
+            font-size: 30px;
+            cursor: pointer;
+            color: gray;
+        }
+        .stars span:hover, .stars span.active {
+            color: gold;
+        }
+        /* Admin Section */
+        .admin-container {
+            margin-top: 40px;
             padding: 20px;
-            background: #2ecc71;
+            background: #333;
             border-radius: 10px;
-            width: 400px;
-            margin-left: auto;
-            margin-right: auto;
         }
         input, button {
             padding: 10px;
-            margin-top: 10px;
-            border-radius: 5px;
+            font-size: 16px;
+            margin: 5px;
+            border-radius: 6px;
             border: none;
         }
-        input { width: 80%; }
-        button { background: #2980b9; color: white; cursor: pointer; }
+        button {
+            background-color: #E91E63;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #C2185B;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Select a Team to Rate</h1>
-    <div class="team-container"></div>
+    <h1>Rate Your Favorite Project</h1>
 
-    <!-- Check Votes Section -->
-    <div class="check-votes-container">
-        <h2>Check Total Votes</h2>
-        <input type="password" id="adminKey" placeholder="Enter secret key">
-        <button onclick="checkVotes()">Check</button>
-        <p id="voteCount"></p>
+    <div class="container">
+        <div class="team-container">
+            <!-- Teams will be generated dynamically -->
+        </div>
+        
+        <!-- Admin Section -->
+        <div class="admin-container">
+            <h2>Check Total Votes</h2>
+            <input type="password" id="adminKey" placeholder="Enter Secret Key">
+            <button onclick="checkVotes()">Check</button>
+            <p id="voteCount"></p>
+        </div>
     </div>
 
     <script>
         const topics = [
             "PPT Presentation",
             "AI Deepfake Voice Detection",
-            "Intelligent Job Classification and Notifications Using Placement Data",
+            "Intelligent Job Classification and Notifications Using Placement Data​",
             "Health Coach: Your Personal Health Companion",
             "Intelligent Learner Management System",
             "Shopsphere (ParkPay)",
@@ -96,10 +109,10 @@
             "Healthy Bites",
             "Doc Tech",
             "Custom Operating System for Effective Learning",
-            "Eco-system",
+            "Eco-System",
             "QURA: The Signware"
         ];
-
+        
         const container = document.querySelector(".team-container");
 
         // Generate teams dynamically
@@ -126,8 +139,8 @@
         });
 
         // Handle Star Selection and Rating Submission
-        function rateTeam(teamName) {
-            const stars = document.querySelectorAll(`[data-team="${teamName}"] span`);
+        function rateTeam(topic) {
+            const stars = document.querySelectorAll(`[data-team="${topic}"] span`);
             let selectedRating = 0;
 
             stars.forEach(star => {
@@ -142,7 +155,7 @@
                     fetch("/rate", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ team: teamName, rating: selectedRating })
+                        body: JSON.stringify({ team: topic, rating: selectedRating })
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -164,10 +177,10 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.total_votes !== undefined) {
-                    document.getElementById("voteCount").innerText = `Total Votes: ${data.total_votes}`;
+                if (data.error) {
+                    alert(data.error);
                 } else {
-                    document.getElementById("voteCount").innerText = "Invalid Key!";
+                    document.getElementById("voteCount").innerText = `Total Votes: ${data.total_votes}`;
                 }
             })
             .catch(error => console.error("Error:", error));
