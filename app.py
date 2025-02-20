@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 
 app = Flask(__name__)
 
@@ -53,13 +53,18 @@ def check_votes():
             else:
                 team_ratings[team] = {"total_votes": 1, "total_rating": vote["rating"]}
 
-        # Prepare data for table
-        table_data = [{"team": team, "votes": data["total_votes"]} for team, data in team_ratings.items()]
+        # Generate table format for results
+        table_html = "<table border='1' style='width:50%; margin:auto; text-align:center;'>"
+        table_html += "<tr><th>Team Name</th><th>Total Votes</th><th>Average Rating</th></tr>"
+        for team, data in team_ratings.items():
+            avg_rating = round(data["total_rating"] / data["total_votes"], 1)
+            table_html += f"<tr><td>{team}</td><td>{data['total_votes']}</td><td>{avg_rating}</td></tr>"
+        table_html += "</table>"
 
-        return jsonify({"results": table_data})
+        return jsonify({"table": table_html})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
